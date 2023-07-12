@@ -1,0 +1,13 @@
+[package]
+name = "helmdall-client"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+reqwest = { version = "0.11.18", features = ["json"] }
+serde = {version="1.0.171", features=["std", "derive", "serde_derive"]}
+serde_json = "1.0.102"
+serde_yaml = "0.9.22"
+tokio = { version = "1.29.1", features = ["full"] }
