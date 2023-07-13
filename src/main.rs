@@ -54,9 +54,10 @@ async fn get_ping(api_uri: &str, client: &Client) -> Result<PingRequest, Box<dyn
 
 async fn drive(cfg: Config){
     let client = Client::new();
-    let sleep_time = 60;
+    let mut timeout_s = vec![15, 15, 30, 60];
 
     while let Err(e) = get_ping(cfg.get_api_uri(), &client).await {
+        let sleep_time = timeout_s.pop().unwrap_or(120);
         println!("failed to ping the API server:\n{e:?}");
         println!("trying again in {} seconds...", sleep_time);
         sleep(tokio::time::Duration::from_secs(sleep_time));
