@@ -1,5 +1,4 @@
-use crate::models::audit::ScriptGroup;
-
+use log::{Level, LevelFilter};
 use std::error::Error;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -8,12 +7,16 @@ use serde::{
     Deserialize
 };
 
+use crate::models::audit::ScriptGroup;
+
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
     socket_key: String,
     client_name: String,
     api_uri: String,
-    audit_options: Vec<ScriptGroup>
+    audit_options: Vec<ScriptGroup>,
+    verbose: LevelFilter
 }
 
 impl Config {
@@ -23,6 +26,7 @@ impl Config {
             client_name: "arch-server".to_string(),
             api_uri: "https://3c41ca28-7235-4fb0-8d1f-17947f8a053b.mock.pstmn.io".to_string(),
             audit_options: Vec::<ScriptGroup>::new(),
+            verbose: LevelFilter::Info
         }
     }
 
@@ -40,6 +44,10 @@ impl Config {
 
     pub fn get_audit_options(&self) -> &Vec<ScriptGroup> {
         &self.audit_options
+    }
+
+    pub fn get_verbosity(&self) -> &LevelFilter {
+        &self.verbose
     }
 
     pub fn load_from_file(file_path: &str) -> Result<Config, Box<dyn Error>> {
