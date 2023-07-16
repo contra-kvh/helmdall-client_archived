@@ -1,14 +1,10 @@
-use log::{Level, LevelFilter};
+use log::LevelFilter;
+use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::fs::File;
 use std::io::{Read, Write};
-use serde::{
-    Serialize,
-    Deserialize
-};
 
 use crate::models::audit::ScriptGroup;
-
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
@@ -16,7 +12,7 @@ pub struct Config {
     client_name: String,
     api_uri: String,
     audit_options: Vec<ScriptGroup>,
-    verbose: LevelFilter
+    verbose: LevelFilter,
 }
 
 impl Config {
@@ -26,8 +22,8 @@ impl Config {
             client_name: "arch-server".to_string(),
             api_uri: "https://3c41ca28-7235-4fb0-8d1f-17947f8a053b.mock.pstmn.io".to_string(),
             audit_options: Vec::<ScriptGroup>::new(),
-            verbose: LevelFilter::Info
-        }
+            verbose: LevelFilter::Info,
+        };
     }
 
     pub fn get_socket_key(&self) -> &str {
