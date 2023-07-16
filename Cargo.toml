@@ -14,3 +14,4 @@ serde = {version="1.0.171", features=["std", "derive", "serde_derive"]}
 serde_json = "1.0.102"
 serde_yaml = "0.9.22"
 tokio = { version = "1.29.1", features = ["full"] }
+ws = { version = "0.9.2", features = ["ssl"] }
