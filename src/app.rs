@@ -18,15 +18,20 @@ impl AppState {
 }
 
 pub struct Helmdall {
+    path: String,
     state: AppState,
 }
 
 impl Helmdall {
-    pub async fn bootstrap(cfg_path: &str) -> Helmdall {
+    pub async fn bootstrap(path: &str) -> Helmdall {
         info!("bootstrapping the application...");
-        let state = AppState::new(cfg_path).await;
+        let config_path = path.to_string() + "/config.yaml";
+        let state = AppState::new(&config_path).await;
         let socket_config = state.api_client.get_socket_config().await.unwrap();
-        let app = Helmdall { state };
+        let app = Helmdall {
+            path: path.to_string(),
+            state,
+        };
         info!("bootstrapping complete.");
         app
     }

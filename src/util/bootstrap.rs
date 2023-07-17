@@ -1,3 +1,4 @@
+use fern::Dispatch;
 use log::{debug, error, info};
 use std::process;
 
@@ -5,20 +6,17 @@ use crate::models::config::Config;
 use crate::util::{api::APIClient, logging::setup_logger};
 
 pub async fn bootstrap(cfg_path: &str) -> (Config, APIClient) {
-    let dispatch = fern::Dispatch::new();
-    info!("starting the client...");
+    info!("initializing the config...");
     let cfg = initialize_config(&cfg_path);
     debug!("config initialized: {cfg:#?}");
 
     info!("initializing the logger according to the given config...");
-    setup_logger(dispatch, cfg.get_verbosity());
+    setup_logger(cfg.get_verbosity());
 
     info!("initializing the API client");
     let mut api_client = APIClient::new();
     api_client.bootstrap(&cfg).await;
     info!("api client initialized and bootstrapped successfully.");
-
-    info!("initialization complete.");
     (cfg, api_client)
 }
 

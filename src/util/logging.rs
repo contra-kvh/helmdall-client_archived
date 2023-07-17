@@ -12,8 +12,8 @@ macro_rules! fatal {
     };
 }
 
-pub fn setup_logger(dispatch: Dispatch, level: &LevelFilter) {
-    match dispatch
+pub fn setup_logger(level: &LevelFilter) {
+    fern::Dispatch::new()
         .format(|out, message, record| {
             out.finish(format_args!(
                 "[{date}] {level: <6} {target} - {message}",
@@ -27,12 +27,5 @@ pub fn setup_logger(dispatch: Dispatch, level: &LevelFilter) {
         .level_for("ws", Warn)
         .chain(std::io::stdout())
         .chain(fern::log_file("output.log").unwrap())
-        .apply()
-    {
-        Ok(_) => info!("logger initialized"),
-        Err(e) => {
-            println!("failed to initialize the logger:\n{e:?}");
-            process::exit(1);
-        }
-    }
+        .apply();
 }
