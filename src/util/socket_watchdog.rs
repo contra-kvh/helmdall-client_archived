@@ -46,7 +46,7 @@ pub fn connect_to_socket(
     info!("using connection token: {}...", connection_token);
 
     connect(provisioned_socket, |out| {
-        out.send(format!("{connection_token}")).unwrap();
+        out.send("{connection_token}").unwrap();
         info!("token: {}", out.connection_id());
 
         Watchdog { ws: out }

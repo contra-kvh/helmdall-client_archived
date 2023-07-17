@@ -104,7 +104,7 @@ impl APIClient {
                     error!(
                         "encountered an authentication error. consider regenerating the socket key"
                     );
-                    process::exit(e.code() as i32);
+                    process::exit(e.code());
                 }
                 APIErrorKind::APIConnectionError => {
                     let sleep_time = timeout_s.pop().unwrap_or(120);

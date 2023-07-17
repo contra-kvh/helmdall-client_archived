@@ -7,7 +7,7 @@ use crate::util::{api::APIClient, logging::setup_logger};
 
 pub async fn bootstrap(cfg_path: &str) -> (Config, APIClient) {
     info!("initializing the config...");
-    let cfg = initialize_config(&cfg_path);
+    let cfg = initialize_config(cfg_path);
     debug!("config initialized: {cfg:#?}");
 
     info!("initializing the logger according to the given config...");
@@ -22,7 +22,7 @@ pub async fn bootstrap(cfg_path: &str) -> (Config, APIClient) {
 
 fn initialize_config(cfg_path: &str) -> Config {
     info!("initializing the config...");
-    let cfg = match Config::load_from_file(&cfg_path) {
+    let cfg = match Config::load_from_file(cfg_path) {
         Ok(cfg) => cfg,
         Err(e) => {
             error!("failed to process the config file.\n{e:#?}");

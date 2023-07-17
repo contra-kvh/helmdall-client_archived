@@ -17,13 +17,13 @@ pub struct Config {
 
 impl Config {
     pub fn new() -> Config {
-        return Config {
+        Config {
             socket_key: "CLIENT_ORIG-dummy".to_string(),
             client_name: "arch-server".to_string(),
             api_uri: "https://3c41ca28-7235-4fb0-8d1f-17947f8a053b.mock.pstmn.io".to_string(),
             audit_options: Vec::<ScriptGroup>::new(),
             verbose: LevelFilter::Info,
-        };
+        }
     }
 
     pub fn get_socket_key(&self) -> &str {
@@ -58,7 +58,7 @@ impl Config {
     pub fn save_to_file(&self, file_path: &str) -> Result<(), Box<dyn Error>> {
         let mut file = File::create(file_path)?;
         let contents = serde_yaml::to_string(&self)?;
-        file.write(contents.as_bytes())?;
+        let bytes = file.write(contents.as_bytes()).unwrap();
 
         Ok(())
     }
