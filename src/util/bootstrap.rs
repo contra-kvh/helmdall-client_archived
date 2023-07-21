@@ -1,17 +1,18 @@
-use fern::Dispatch;
 use log::{debug, error, info};
 use std::process;
 
 use crate::models::config::Config;
-use crate::util::{api::APIClient, logging::setup_logger};
+use crate::util::api::APIClient;
 
-pub async fn bootstrap(cfg_path: &str) -> (Config, APIClient) {
+use super::logging::Logger;
+
+pub async fn bootstrap(cfg_path: &str, logger: &Logger) -> (Config, APIClient) {
     info!("initializing the config...");
     let cfg = initialize_config(cfg_path);
     debug!("config initialized: {cfg:#?}");
 
     info!("initializing the logger according to the given config...");
-    setup_logger(cfg.get_verbosity());
+    logger.update_verbosity(cfg.get_logger_config());
 
     info!("initializing the API client");
     let mut api_client = APIClient::new();
@@ -27,7 +28,8 @@ fn initialize_config(cfg_path: &str) -> Config {
         Err(e) => {
             error!("failed to process the config file.\n{e:#?}");
             info!("attempting to save a dummy config at the config path...");
-            write_cfg(Config::new(), cfg_path);
+            let dummy_example = cfg_path.to_string() + ".example";
+            write_cfg(Config::new(), dummy_example.as_str());
             info!("consider generating a config from your helmdall account :)");
             process::exit(2);
         }
