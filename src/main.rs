@@ -14,7 +14,7 @@ mod util;
 #[tokio::main]
 async fn main() -> Result<(), fern::InitError> {
     setup_logger(&log::LevelFilter::Debug);
-    let path = match std::env::var("HELMDALL_PATH") {
+    let path = match std::env::var("HOME") {
         Ok(path) => path,
         Err(_) => ".".to_string(),
     };

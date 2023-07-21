@@ -13,6 +13,8 @@ pub struct Config {
     api_uri: String,
     audit_options: Vec<ScriptGroup>,
     verbose: LevelFilter,
+    #[serde(default = "plugins_path")]
+    plugin_path: String,
 }
 
 impl Config {
@@ -23,6 +25,7 @@ impl Config {
             api_uri: "https://3c41ca28-7235-4fb0-8d1f-17947f8a053b.mock.pstmn.io".to_string(),
             audit_options: Vec::<ScriptGroup>::new(),
             verbose: LevelFilter::Info,
+            plugin_path: plugins_path(),
         }
     }
 
@@ -62,4 +65,8 @@ impl Config {
 
         Ok(())
     }
+}
+
+fn plugins_path() -> String {
+    std::env::var("HOME").unwrap_or(".".to_string()) + "/plugins"
 }
