@@ -1,4 +1,5 @@
 use log::LevelFilter;
+use log4rs::config;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::fs::File;
@@ -6,14 +7,16 @@ use std::io::{Read, Write};
 
 use crate::models::audit::ScriptGroup;
 
+use super::logger::LoggerConfig;
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
     socket_key: String,
     client_name: String,
     api_uri: String,
     audit_options: Vec<ScriptGroup>,
-    verbose: LevelFilter,
-    #[serde(default = "plugins_path")]
+    logger: LoggerConfig,
+    #[serde(default = "default_plugins_path")]
     plugin_path: String,
 }
 
@@ -24,8 +27,8 @@ impl Config {
             client_name: "arch-server".to_string(),
             api_uri: "https://3c41ca28-7235-4fb0-8d1f-17947f8a053b.mock.pstmn.io".to_string(),
             audit_options: Vec::<ScriptGroup>::new(),
-            verbose: LevelFilter::Info,
-            plugin_path: plugins_path(),
+            logger: LoggerConfig::new(),
+            plugin_path: default_plugins_path(),
         }
     }
 
@@ -41,12 +44,16 @@ impl Config {
         &self.api_uri
     }
 
+    pub fn get_logger_config(&self) -> &LoggerConfig {
+        &self.logger
+    }
+
     pub fn get_audit_options(&self) -> &Vec<ScriptGroup> {
         &self.audit_options
     }
 
-    pub fn get_verbosity(&self) -> &LevelFilter {
-        &self.verbose
+    pub fn get_plugin_path(&self) -> &str {
+        &self.plugin_path
     }
 
     pub fn load_from_file(file_path: &str) -> Result<Config, Box<dyn Error>> {
@@ -67,6 +74,6 @@ impl Config {
     }
 }
 
-fn plugins_path() -> String {
+fn default_plugins_path() -> String {
     std::env::var("HOME").unwrap_or(".".to_string()) + "/plugins"
 }
