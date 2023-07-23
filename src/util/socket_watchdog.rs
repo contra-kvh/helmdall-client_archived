@@ -6,11 +6,11 @@ use ws::{connect, CloseCode, Message};
 use crate::models::api_comms::ConnectionRequest;
 use crate::models::config::Config;
 
-struct SocketClient {
+struct Watchdog {
     ws: ws::Sender,
 }
 
-impl ws::Handler for SocketClient {
+impl ws::Handler for Watchdog {
     fn on_message(&mut self, msg: Message) -> ws::Result<()> {
         let msg_text = msg.as_text().unwrap();
         if msg_text.eq("invalid token") {
@@ -46,10 +46,10 @@ pub fn connect_to_socket(
     info!("using connection token: {}...", connection_token);
 
     connect(provisioned_socket, |out| {
-        out.send(format!("{connection_token}")).unwrap();
+        out.send("{connection_token}").unwrap();
         info!("token: {}", out.connection_id());
 
-        SocketClient { ws: out }
+        Watchdog { ws: out }
     })
     .unwrap();
 

@@ -1,18 +1,20 @@
-use std::error::Error;
+use std::{error::Error, process};
 
 use log::{debug, error, info};
 use reqwest::{header, Client};
 use std::thread::sleep;
 
-use crate::models::{
-    api_comms::{ConnectionRequest, PingRequest},
-    config::Config,
+use crate::{
+    errors::api::{APIError, APIErrorKind},
+    models::{
+        api_comms::{ConnectionRequest, PingRequest},
+        config::Config,
+    },
 };
 
 pub struct APIClient {
     client: Client,
     api_uri: String,
-    provisioned_socket: Option<String>,
 }
 
 impl APIClient {
@@ -20,7 +22,6 @@ impl APIClient {
         APIClient {
             client: reqwest::Client::new(),
             api_uri: String::new(),
-            provisioned_socket: None,
         }
     }
 
@@ -44,31 +45,51 @@ impl APIClient {
         info!("client built successfully.");
 
         self.api_uri = app_config.get_api_uri().to_string();
-
+        info!("validating connection with the api server...");
         self.validate_connection().await;
-        self.provisioned_socket = Some(app_config.get_socket_key().to_string());
+        info!("connection with the api server validated.");
+        info!("API bootstrap complete");
     }
 
-    async fn get_ping(&self) -> Result<PingRequest, Box<dyn Error>> {
+    pub async fn get_socket_config(&self) -> Result<ConnectionRequest, Box<dyn Error>> {
+        info!("attempting to acquire socket information.");
+        let res = self
+            .client
+            .get(format!("{}/get_connection/", self.api_uri))
+            .send()
+            .await?;
+        let connection_request: ConnectionRequest = res.json().await?;
+        Ok(connection_request)
+    }
+
+    async fn get_ping(&self) -> Result<PingRequest, Box<APIError>> {
         info!(
             "trying to ping configured API server at: {}...",
             self.api_uri
         );
+
         let res = self
             .client
             .get(format!("{}/ping", self.api_uri))
             .send()
-            .await?;
+            .await
+            .map_err(|err| APIError::new(APIErrorKind::APIConnectionError, err.to_string(), 502))?;
+
         debug!("ping response: {res:#?}");
-        let ping_request: PingRequest = res.json().await?;
+        let ping_request: PingRequest = res
+            .json()
+            .await
+            .map_err(|err| APIError::new(APIErrorKind::APIConnectionError, err.to_string(), 502))?;
         if ping_request.status == 200 {
             info!("API server is up and running.");
+            info!("received message: {}", ping_request.message);
             Ok(ping_request)
         } else {
-            error!("API server is not up and running.");
-            Err(Box::new(std::io::Error::new(
-                std::io::ErrorKind::PermissionDenied,
+            error!("API server refused authentication.");
+            Err(Box::new(APIError::new(
+                APIErrorKind::APIAuthError,
                 ping_request.message,
+                ping_request.status,
             )))
         }
     }
@@ -77,21 +98,21 @@ impl APIClient {
         let mut timeout_s = vec![60, 30, 15, 15];
 
         while let Err(e) = self.get_ping().await {
-            let sleep_time = timeout_s.pop().unwrap_or(120);
-            error!("failed to ping the API server:\n{e:#?}");
-            info!("trying again in {} seconds...", sleep_time);
-            sleep(tokio::time::Duration::from_secs(sleep_time));
+            println!("{:#?}", e);
+            match e.kind() {
+                APIErrorKind::APIAuthError => {
+                    error!(
+                        "encountered an authentication error. consider regenerating the socket key"
+                    );
+                    process::exit(e.code());
+                }
+                APIErrorKind::APIConnectionError => {
+                    let sleep_time = timeout_s.pop().unwrap_or(120);
+                    error!("failed to ping the API server:\n{:#?}", *e);
+                    info!("trying again in {} seconds...", sleep_time);
+                    sleep(tokio::time::Duration::from_secs(sleep_time));
+                }
+            }
         }
-    }
-
-    async fn get_connection(&self) -> Result<ConnectionRequest, Box<dyn Error>> {
-        info!("getting connection information from: {}...", self.api_uri);
-        let res = self
-            .client
-            .get(format!("{}/get_connection/", self.api_uri))
-            .send()
-            .await?;
-        let connection_request: ConnectionRequest = res.json().await?;
-        Ok(connection_request)
     }
 }
