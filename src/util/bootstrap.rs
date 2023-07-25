@@ -13,6 +13,7 @@ pub async fn bootstrap(cfg_path: &str, logger: &Logger) -> (Config, APIClient) {
 
     info!("initializing the logger according to the given config...");
     logger.update_verbosity(cfg.get_logger_config());
+    info!("logger initialized successfully.");
 
     info!("initializing the API client");
     let mut api_client = APIClient::new();

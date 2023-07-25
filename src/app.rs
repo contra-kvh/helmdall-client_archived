@@ -1,8 +1,15 @@
+use std::{
+    ops::Deref,
+    rc::Rc,
+    sync::{Arc, Mutex},
+    thread::{self, JoinHandle},
+};
+
 use log::{error, info};
 
 use crate::{
-    models::config::Config,
-    util::{api::APIClient, bootstrap, logging::Logger, socket_watchdog},
+    models::{api_comms::ConnectionRequest, config::Config},
+    util::{api::APIClient, bootstrap, logging::Logger, watchdog},
 };
 
 struct AppState {
@@ -20,6 +27,7 @@ impl AppState {
 pub struct Helmdall {
     path: String,
     state: AppState,
+    connection: ConnectionRequest,
 }
 
 impl Helmdall {
@@ -28,11 +36,25 @@ impl Helmdall {
         let config_path = path.to_string() + "/config.yaml";
         let state = AppState::new(&config_path, &logger).await;
         let socket_config = state.api_client.get_socket_config().await.unwrap();
+
+        let local_socket_path = path.to_string() + "/helmdall.sock";
+
         let app = Helmdall {
             path: path.to_string(),
             state,
+            connection: socket_config,
         };
         info!("bootstrapping complete.");
         app
     }
+
+    pub fn get_config(&self) -> &Config {
+        &self.state.cfg
+    }
+
+    pub fn get_connection(&self) -> &ConnectionRequest {
+        &self.connection
+    }
+
+    pub fn local_listen(local_socket_path: &str) {}
 }
